@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/rag-presets.json",
+  "confluence-only": {
+    "providers": ["confluence"],
+    "vectorStore": "pinecone",
+    "chunkSize": 1000,
+    "overlap": 200
+  },
+  "multi-source": {
+    "providers": ["confluence"],
+    "vectorStore": "pinecone",
+    "chunkSize": 800,
+    "overlap": 160
+  }
+}

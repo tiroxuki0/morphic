@@ -28,7 +28,7 @@ export function SearchModeSelector() {
 
   useEffect(() => {
     const savedMode = getCookie('searchMode')
-    if (savedMode && ['quick', 'adaptive'].includes(savedMode)) {
+    if (savedMode && ['quick', 'adaptive', 'confluence'].includes(savedMode)) {
       setValue(savedMode as SearchMode)
     } else if (savedMode) {
       // Clean up invalid cookie value (e.g., old 'planning' mode)

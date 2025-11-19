@@ -7,6 +7,9 @@ import { getCurrentUserId } from '@/lib/auth/get-current-user'
 import * as dbActions from '@/lib/db/actions'
 import type { Chat, Message } from '@/lib/db/schema'
 import { generateId } from '@/lib/db/schema'
+import { loadRagConfig } from '@/lib/rag/options/rag-config'
+import { getRagManager } from '@/lib/rag/options/rag-manager'
+import type { RagResult } from '@/lib/rag/types/rag'
 import type { UIMessage } from '@/lib/types/ai'
 import { getTextFromParts } from '@/lib/utils/message-utils'
 
@@ -335,4 +338,44 @@ export async function saveChatTitle(
     await dbActions.updateChatTitle(chatId, title)
     revalidateTag(`chat-${chatId}`, 'max')
   }
+}
+
+export interface EnhancedMessage {
+  original: string
+  ragContext?: RagResult[]
+  enhanced?: string
+}
+
+export async function enhanceWithRag(
+  message: string,
+  ragConfig = loadRagConfig()
+): Promise<EnhancedMessage> {
+  if (!ragConfig.enabled) {
+    return { original: message }
+  }
+
+  const ragManager = getRagManager()
+  const ragResults = await ragManager.search(message, {
+    provider: ragConfig.provider,
+    hybridMode: ragConfig.options.hybridMode
+  })
+
+  return {
+    original: message,
+    ragContext: ragResults,
+    enhanced: combineMessageWithRag(message, ragResults)
+  }
+}
+
+function combineMessageWithRag(message: string, results: RagResult[]) {
+  if (!results.length) return message
+
+  const context = results
+    .map((result, index) => {
+      const title = result.chunk.title || `Result ${index + 1}`
+      return `Source ${index + 1} – ${title}\n${result.chunk.content}`
+    })
+    .join('\n\n')
+
+  return `${message}\n\nContext:\n${context}`
 }

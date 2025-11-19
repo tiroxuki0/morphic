@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { BookOpen, Search } from 'lucide-react'
 
 import { SearchMode } from '@/lib/types/search'
 
@@ -27,6 +27,13 @@ export const SEARCH_MODE_CONFIGS: SearchModeConfig[] = [
     description: 'Adaptive agentic search with intelligent query understanding',
     icon: IconLogoOutline,
     color: 'text-violet-500'
+  },
+  {
+    value: 'confluence',
+    label: 'Confluence',
+    description: 'Answer exclusively from indexed Confluence knowledge',
+    icon: BookOpen,
+    color: 'text-blue-500'
   }
 ]
 

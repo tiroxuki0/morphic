@@ -13,7 +13,7 @@ import { Langfuse } from 'langfuse'
 import { researcher } from '@/lib/agents/researcher'
 import { isTracingEnabled } from '@/lib/utils/telemetry'
 
-import { loadChat } from '../actions/chat'
+import { enhanceWithRag, loadChat } from '../actions/chat'
 import { generateChatTitle } from '../agents/title-generator'
 import {
   getMaxAllowedTokens,
@@ -31,6 +31,11 @@ import { BaseStreamConfig } from './types'
 
 // Constants
 const DEFAULT_CHAT_TITLE = 'Untitled'
+
+type RagEnhancementResult = {
+  messages: UIMessage[]
+  ragContext?: unknown
+}
 
 export async function createChatStreamResponse(
   config: BaseStreamConfig
@@ -121,7 +126,12 @@ export async function createChatStreamResponse(
         perfLog(
           `prepareMessages - Invoked: trigger=${trigger}, isNewChat=${isNewChat}`
         )
-        const messagesToModel = await prepareMessages(context, message)
+        let messagesToModel = await prepareMessages(context, message)
+        const ragEnhancement = await applyRagEnhancement(
+          messagesToModel,
+          message
+        )
+        messagesToModel = ragEnhancement.messages
         perfTime('prepareMessages completed (stream)', prepareStart)
 
         // Get the researcher agent with parent trace ID, search mode, and model type
@@ -250,4 +260,59 @@ export async function createChatStreamResponse(
     stream,
     consumeSseStream: consumeStream
   })
+}
+
+async function applyRagEnhancement(
+  messages: UIMessage[],
+  latestMessage: UIMessage | null
+): Promise<RagEnhancementResult> {
+  if (!messages.length) {
+    return { messages }
+  }
+
+  const lastUserIndex = [...messages]
+    .map((msg, index) => ({ msg, index }))
+    .reverse()
+    .find(entry => entry.msg.role === 'user')?.index
+
+  if (lastUserIndex === undefined) {
+    return { messages }
+  }
+
+  const targetMessage =
+    latestMessage && latestMessage.role === 'user'
+      ? latestMessage
+      : messages[lastUserIndex]
+
+  const userText = getTextFromParts(targetMessage.parts)
+  if (!userText.trim()) {
+    return { messages }
+  }
+
+  const enhanced = await enhanceWithRag(userText)
+  if (!enhanced.enhanced || enhanced.enhanced === userText) {
+    return { messages }
+  }
+
+  const clonedMessage: UIMessage = {
+    ...messages[lastUserIndex],
+    parts: [
+      {
+        type: 'text',
+        text: enhanced.enhanced
+      }
+    ],
+    metadata: {
+      ...(messages[lastUserIndex].metadata || {}),
+      ragContext: enhanced.ragContext
+    }
+  }
+
+  const updatedMessages = [...messages]
+  updatedMessages[lastUserIndex] = clonedMessage
+
+  return {
+    messages: updatedMessages,
+    ragContext: enhanced.ragContext
+  }
 }

@@ -20,7 +20,7 @@ const DEFAULT_MODEL: Model = {
 }
 
 const VALID_MODEL_TYPES: ModelType[] = ['speed', 'quality']
-const MODE_FALLBACK_ORDER: SearchMode[] = ['quick', 'adaptive']
+const MODE_FALLBACK_ORDER: SearchMode[] = ['quick', 'adaptive', 'confluence']
 
 interface ModelSelectionParams {
   cookieStore: ReadonlyRequestCookies

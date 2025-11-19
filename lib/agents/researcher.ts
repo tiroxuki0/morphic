@@ -26,6 +26,7 @@ import { isTracingEnabled } from '../utils/telemetry'
 
 import {
   ADAPTIVE_MODE_PROMPT,
+  CONFLUENCE_MODE_PROMPT,
   QUICK_MODE_PROMPT
 } from './prompts/search-mode-prompts'
 
@@ -119,7 +120,6 @@ export function createResearcher({
         break
 
       case 'adaptive':
-      default:
         systemPrompt = ADAPTIVE_MODE_PROMPT
         activeToolsList = ['search', 'fetch']
         // Only enable todo tools for quality model type
@@ -128,6 +128,29 @@ export function createResearcher({
         }
         console.log(
           `[Researcher] Adaptive mode: maxSteps=50, modelType=${modelType}, tools=[${activeToolsList.join(', ')}]`
+        )
+        maxSteps = 50
+        searchTool = originalSearchTool
+        break
+
+      case 'confluence':
+        console.log(
+          '[Researcher] Confluence mode: maxSteps=30, tools=[] (Confluence context only)'
+        )
+        systemPrompt = CONFLUENCE_MODE_PROMPT
+        activeToolsList = []
+        maxSteps = 30
+        searchTool = originalSearchTool
+        break
+
+      default:
+        systemPrompt = ADAPTIVE_MODE_PROMPT
+        activeToolsList = ['search', 'fetch']
+        if (writer && 'todoWrite' in todoTools && modelType === 'quality') {
+          activeToolsList.push('todoWrite')
+        }
+        console.log(
+          `[Researcher] Adaptive (fallback) mode: maxSteps=50, modelType=${modelType}, tools=[${activeToolsList.join(', ')}]`
         )
         maxSteps = 50
         searchTool = originalSearchTool

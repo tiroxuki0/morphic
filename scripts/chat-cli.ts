@@ -15,7 +15,7 @@ interface ChatApiConfig {
   message: string
   chatId?: string
   modelType?: 'speed' | 'quality'
-  searchMode?: 'quick' | 'adaptive' | boolean
+  searchMode?: 'quick' | 'adaptive' | 'confluence' | boolean
   trigger?: 'submit-message' | 'regenerate-message'
   messageId?: string
 }
@@ -336,10 +336,10 @@ function parseArgs(): Partial<ChatApiConfig> {
         break
       case '--search-mode':
         const searchMode = args[++i]
-        if (['quick', 'adaptive'].includes(searchMode)) {
-          config.searchMode = searchMode as 'quick' | 'adaptive'
+        if (['quick', 'adaptive', 'confluence'].includes(searchMode)) {
+          config.searchMode = searchMode as 'quick' | 'adaptive' | 'confluence'
         } else {
-          console.error('❌ Invalid search mode. Use: quick or adaptive')
+          console.error('❌ Invalid search mode. Use: quick, adaptive, or confluence')
           process.exit(1)
         }
         break
@@ -377,7 +377,7 @@ Options:
   -c, --chat-id <id>      Chat ID (default: auto-generated)
   -s, --search            Enable search mode with adaptive strategy (default)
   --no-search             Disable search mode
-  --search-mode <type>    Search strategy: quick or adaptive
+  --search-mode <type>    Search strategy: quick, adaptive, or confluence
   --model-type <type>     Model type: speed (default) or quality
   -t, --trigger <type>    Trigger type: submit (default) or regenerate
   --message-id <id>       Message ID (required for regenerate)

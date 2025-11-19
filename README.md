@@ -111,6 +111,23 @@ Models are configured in `config/models/*.json` with profile-based settings. Whe
 - LLM observability with Langfuse (optional)
 - Todo tracking for complex tasks
 - Changelog system for updates
+- Feature-flagged Retrieval Augmented Generation (Confluence + Pinecone/Qdrant/Chroma)
+
+### Retrieval Augmented Generation
+
+The new `lib/rag` workspace introduces a modular RAG pipeline with Confluence connectors, configurable vector stores (Pinecone, Qdrant, or Chroma), and preset-driven options. Enable it by setting `RAG_ENABLED=true` in `.env.local`, then choose a preset in `config/rag-presets.json` or override chunking/search options with `RAG_*` environment variables. When enabled, chat requests can be enriched with Confluence context without impacting the default researcher agent.
+
+#### Indexing Confluence spaces
+
+Once your `.env.local` (or `.env`) contains the RAG + Confluence variables, ingest a space with:
+
+```bash
+DOTENV_CONFIG_PATH=.env.local bunx tsx scripts/index-confluence-space.ts S5 --stats
+```
+
+The script normalizes Atlassian URLs, auto-creates Pinecone indexes if needed, upserts chunks in batches, and prints summary metrics (documents, chunks, skipped pages) when `--stats` is provided. Re-run it whenever you need to refresh the vector store for a space.
+
+- After indexing, open the search mode selector in the chat UI (or set `searchMode=confluence` via the CLI/cookie) to switch to the **Confluence** agent. This mode disables external web search and forces answers to rely solely on the Confluence context injected by RAG.
 
 ## 🧱 Stack
 

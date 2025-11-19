@@ -46,6 +46,20 @@ const adaptiveSpeedModel: Model = {
   providerId: 'provider-d'
 }
 
+const confluenceSpeedModel: Model = {
+  id: 'confluence-speed',
+  name: 'Confluence Speed',
+  provider: 'Provider E',
+  providerId: 'provider-e'
+}
+
+const confluenceQualityModel: Model = {
+  id: 'confluence-quality',
+  name: 'Confluence Quality',
+  provider: 'Provider F',
+  providerId: 'provider-f'
+}
+
 let matrix: Matrix
 
 function setMatrixImplementation() {
@@ -76,6 +90,10 @@ describe('selectModel', () => {
       adaptive: {
         speed: adaptiveSpeedModel,
         quality: adaptiveQualityModel
+      },
+      confluence: {
+        speed: confluenceSpeedModel,
+        quality: confluenceQualityModel
       }
     }
     setMatrixImplementation()
