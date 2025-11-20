@@ -7,11 +7,11 @@ import { selectModel } from '@/lib/utils/model-selection'
 import { getModel } from '@/lib/utils/registry'
 
 const FALLBACKS = [
-  'Bạn đang làm gì hôm nay?',
-  'Có trend Việt Nam nào khiến bạn tò mò?',
-  'Muốn cập nhật tin nóng thế giới không?',
-  'Bạn đang chuẩn bị cho project nào?',
-  'Có câu hỏi nào muốn tôi đào sâu ngay không?'
+  'Hôm nay bạn muốn đào sâu chủ đề nào?',
+  'Có dự án nào cần tôi gợi ý nghiên cứu?',
+  'Muốn tôi lướt tin nóng hay đào sâu câu hỏi?',
+  'Bạn tò mò điều gì nhất về công nghệ?',
+  'Có link hoặc ý tưởng nào để tôi tóm tắt?'
 ]
 
 export async function GET() {
@@ -39,14 +39,16 @@ export async function GET() {
     const modelId = `${model.providerId}:${model.id}`
 
     const system =
-      'You are a concise greeter for a research AI. Respond with ONE short, friendly question (max 80 characters). ' +
-      'Make it feel current by referencing either a Vietnam trend or a global headline theme if relevant, but without needing real-time data; keep it evergreen and non-specific. ' +
+      'You are a concise greeter for a research AI. Respond with ONE short, curious, and intelligent question of 8-10 words. ' +
+      'Vary structure so it feels flexible, not templated; invite exploration or summarization without demanding specific data. ' +
+      'Keep wording evergreen (no dated references), optional gentle nods to Vietnam or global themes are fine. ' +
       'Avoid emojis. Return only the question.'
 
     const { text } = await generateText({
       model: getModel(modelId),
       system,
-      prompt: 'Create a single-line greeting question.',
+      prompt:
+        'Write a single-line greeting question (8-10 words) that feels flexible and smart.',
       maxOutputTokens: 50,
       temperature: 0.7
     })

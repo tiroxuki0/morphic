@@ -1,9 +1,9 @@
 'use client'
 
-import { memo, useEffect, useRef, useState } from 'react'
-
 import { TextGenerateEffect } from '@/components/ui/text-generate-effect'
 import { cn } from '@/lib/utils'
+import { motion } from 'motion/react'
+import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
@@ -22,8 +22,10 @@ function AgentLogoComponent() {
   const promptIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const hasStartedPromptPoll = useRef(false)
   const promptBubbleRef = useRef<HTMLDivElement | null>(null)
+  const measureRef = useRef<HTMLDivElement | null>(null)
   const mountRef = useRef(false)
-
+  const [bubbleWidth, setBubbleWidth] = useState<number>(200)
+  console.log('bubbleWidth', bubbleWidth)
   // Track mount to debug re-renders
   if (!mountRef.current) {
     mountRef.current = true
@@ -127,7 +129,7 @@ function AgentLogoComponent() {
 
     fetchPrompt()
 
-    promptIntervalRef.current = setInterval(fetchPrompt, 14000)
+    promptIntervalRef.current = setInterval(fetchPrompt, 5000)
 
     // Cleanup: KHÔNG reset flags để đảm bảo chỉ fetch 1 lần
     // Chỉ cleanup interval nếu có
@@ -154,19 +156,42 @@ function AgentLogoComponent() {
     bubbleEl.dataset.visible = 'true'
   }, [prompt])
 
+  useLayoutEffect(() => {
+    // Measure prompt width to drive smooth container resizing
+    const measure = () => {
+      const node = measureRef.current
+      if (!node) return
+      // Add small padding to allow breathing room around text
+      const measured = node.scrollWidth
+      const padded = Math.max(measured + 18, 200)
+      setBubbleWidth(prev => (prev !== padded ? padded : prev))
+    }
+
+    // Use rAF to ensure DOM has rendered new text before measuring
+    measure()
+    return undefined
+  }, [prompt])
+
   return (
     <div className={cn('flex flex-col items-center gap-5')}>
       {/* Reserve space để tránh layout shift - luôn render bubble container */}
-      <div
+      <motion.div
         ref={promptBubbleRef}
         data-visible="false"
         className={cn(
-          'relative max-w-md rounded-2xl border border-white/20 bg-black/70 px-3 py-3 text-center text-base text-slate-100 shadow-xl backdrop-blur',
+          'absolute transform  rounded-2xl border border-white/20 bg-black/70 px-3 py-3 text-center text-base text-slate-100 shadow-xl backdrop-blur',
           'origin-bottom transition-all duration-300 ease-out motion-reduce:transition-none',
           'min-h-[3rem] flex items-center justify-center', // Reserve space để tránh layout shift
-          "data-[visible='true']:translate-y-0 data-[visible='true']:opacity-100 data-[visible='true']:pointer-events-auto",
+          "data-[visible='true']:translate-y-[calc(-100%-12px)] data-[visible='true']:opacity-100 data-[visible='true']:pointer-events-auto",
           "data-[visible='false']:translate-y-2 data-[visible='false']:opacity-0 data-[visible='false']:pointer-events-none"
         )}
+        initial={{ width: 140 }}
+        animate={{ width: bubbleWidth }}
+        transition={{
+          type: 'spring',
+          stiffness: 260,
+          damping: 28
+        }}
       >
         <div
           className={cn(
@@ -182,8 +207,15 @@ function AgentLogoComponent() {
             duration={0.4}
           />
         ) : (
-          <span className="text-slate-100 text-base">\u00A0</span>
+          <span className="text-slate-100 text-base"></span>
         )}
+      </motion.div>
+      {/* Hidden measurer to size bubble width */}
+      <div
+        ref={measureRef}
+        className="pointer-events-none absolute left-0 top-0 z-[-1] whitespace-pre px-3 py-3 text-base font-normal opacity-0"
+      >
+        {prompt || '\u00A0'}
       </div>
       <div
         ref={containerRef}

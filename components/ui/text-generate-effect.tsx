@@ -17,18 +17,31 @@ export const TextGenerateEffect = ({
   const [scope, animate] = useAnimate()
   let wordsArray = words.split(' ')
   useEffect(() => {
+    // Reset animation state first
     animate(
       'span',
       {
-        opacity: 1,
-        filter: filter ? 'blur(0px)' : 'none'
+        opacity: 0,
+        filter: filter ? 'blur(10px)' : 'none'
       },
       {
-        duration: duration ? duration : 1,
-        delay: stagger(0.2)
+        duration: 0 // Instant reset
       }
-    )
-  }, [words, scope.current, animate, filter, duration])
+    ).then(() => {
+      // Then animate in
+      animate(
+        'span',
+        {
+          opacity: 1,
+          filter: filter ? 'blur(0px)' : 'none'
+        },
+        {
+          duration: duration ? duration : 1,
+          delay: stagger(0.2)
+        }
+      )
+    })
+  }, [scope.current, words, filter, duration])
 
   const renderWords = () => {
     return (
@@ -37,7 +50,6 @@ export const TextGenerateEffect = ({
           return (
             <motion.span
               key={`${word}-${idx}-${words}`}
-              className="inline-block"
               style={{
                 opacity: 0,
                 filter: filter ? 'blur(10px)' : 'none',
@@ -54,10 +66,8 @@ export const TextGenerateEffect = ({
   }
 
   return (
-    <div className={cn('w-full', className)}>
-      <div className="text-center break-words leading-relaxed">
-        {renderWords()}
-      </div>
+    <div className={cn('w-fit', className)}>
+      <div className="text-center ">{renderWords()}</div>
     </div>
   )
 }

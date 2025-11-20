@@ -54,34 +54,34 @@ const actionCategories: ActionCategory[] = [
 
 const promptSamples: Record<string, string[]> = {
   research: [
-    'Why is Nvidia growing so rapidly?',
-    'Research the latest AI developments',
-    'What are the key trends in robotics?',
-    'What are the latest breakthroughs in renewable energy?'
+    'Trace how open-source LLM capabilities shifted over the last year',
+    'Investigate why fusion energy funding is accelerating now',
+    'What policies are shaping the EU AI Act rollout?',
+    'Which startups are redefining personal robotics in 2025?'
   ],
   compare: [
-    'Tesla vs BYD vs Toyota comparison',
-    'Compare Next.js, Remix, and Astro',
-    'AWS vs GCP vs Azure',
-    'iPhone vs Android ecosystem comparison'
+    'Contrast Claude, GPT-4o, and Gemini for multilingual synthesis',
+    'Compare pgvector, Qdrant, and Pinecone for RAG scale and cost',
+    'Modal vs Fly.io vs Lambda: reliability and latency trade-offs',
+    'Evaluate Perplexity, Arc Search, and Brave Search for research'
   ],
   latest: [
-    'Latest news today',
-    'What happened in tech this week?',
-    'Recent breakthroughs in medicine',
-    'Latest AI model releases'
+    'What are the most credible AI safety updates this week?',
+    'Latest scientific breakthroughs in reusable rocket tech',
+    'Recent moves in the quantum computing hardware race',
+    'Notable cybersecurity incidents from the past 72 hours'
   ],
   summarize: [
-    'Summarize: https://arxiv.org/pdf/2504.19678',
-    "Summarize this week's business news",
-    'Create an executive summary of AI trends',
-    'Summarize recent climate change research'
+    'Distill this report into 5 adaptive bullet points: <paste link>',
+    'Turn this changelog into an executive brief with risks highlighted',
+    'Summarize this podcast transcript with key tensions and takeaways',
+    'Reduce this policy draft to a crisp problem/solution outline'
   ],
   explain: [
-    'Explain neural networks simply',
-    'How does blockchain work?',
-    'What is quantum entanglement?',
-    'Explain CRISPR gene editing'
+    'Explain retrieval-augmented generation for a product manager',
+    'How do diffusion models differ from GANs? Include trade-offs',
+    'Walk me through how L2 rollups settle on Ethereum',
+    'Explain vector embeddings using a real-world analogy'
   ]
 }
 
