@@ -13,7 +13,21 @@ export function useAuthCheck() {
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null
 
+    const isAuthDisabled =
+      process.env.NEXT_PUBLIC_ENABLE_AUTH === 'false' ||
+      process.env.ENABLE_AUTH === 'false'
+    const supabaseConfigured =
+      !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
     const checkAuth = async () => {
+      // Allow anonymous mode when auth is disabled or Supabase is not configured
+      if (isAuthDisabled || !supabaseConfigured) {
+        setUser(null)
+        setLoading(false)
+        return
+      }
+
       try {
         const supabase = createClient()
 
@@ -44,5 +58,16 @@ export function useAuthCheck() {
     }
   }, [])
 
-  return { user, loading, isAuthenticated: !!user }
+  const isAuthDisabled =
+    process.env.NEXT_PUBLIC_ENABLE_AUTH === 'false' ||
+    process.env.ENABLE_AUTH === 'false'
+  const supabaseConfigured =
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  return {
+    user,
+    loading,
+    isAuthenticated: isAuthDisabled || !supabaseConfigured || !!user
+  }
 }

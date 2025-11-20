@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import Textarea from 'react-textarea-autosize'
 import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Textarea from 'react-textarea-autosize'
 
 import { UseChatHelpers } from '@ai-sdk/react'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
@@ -12,13 +12,13 @@ import { UploadedFile } from '@/lib/types'
 import type { UIDataTypes, UIMessage, UITools } from '@/lib/types/ai'
 import { cn } from '@/lib/utils'
 
-import { useArtifact } from './artifact/artifact-context'
-import { Button } from './ui/button'
-import { IconLogo } from './ui/icons'
 import { ActionButtons } from './action-buttons'
+import { AgentLogo } from './agent-logo'
+import { useArtifact } from './artifact/artifact-context'
 import { FileUploadButton } from './file-upload-button'
 import { ModelTypeSelector } from './model-type-selector'
 import { SearchModeSelector } from './search-mode-selector'
+import { Button } from './ui/button'
 import { UploadedFileList } from './uploaded-file-list'
 
 // Constants for timing delays
@@ -139,6 +139,9 @@ export function ChatPanel({
     }
   }
 
+  // Memoize AgentLogo to prevent re-renders when ChatPanel re-renders
+  const agentLogo = useMemo(() => <AgentLogo />, [])
+
   return (
     <div
       className={cn(
@@ -148,7 +151,7 @@ export function ChatPanel({
     >
       {messages.length === 0 && (
         <div className="mb-10 flex flex-col items-center gap-4">
-          <IconLogo className="size-12 text-muted-foreground" />
+          {agentLogo}
         </div>
       )}
       {uploadedFiles.length > 0 && (

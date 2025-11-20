@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false, // Tắt StrictMode để tránh double render trong development
   images: {
     remotePatterns: [
       {
