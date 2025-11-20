@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useRef, useState } from 'react'
 
+import { TextGenerateEffect } from '@/components/ui/text-generate-effect'
 import { cn } from '@/lib/utils'
 
 function clamp(value: number, min: number, max: number) {
@@ -16,17 +17,12 @@ function AgentLogoComponent() {
   const pupilsRef = useRef<HTMLDivElement[]>([])
   const blinkCleanupRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const [prompt, setPrompt] = useState('')
-  const [displayedText, setDisplayedText] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
   const promptValueRef = useRef('')
   const isFetchingPrompt = useRef(false)
   const promptIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const hasStartedPromptPoll = useRef(false)
   const promptBubbleRef = useRef<HTMLDivElement | null>(null)
   const mountRef = useRef(false)
-  const typingAnimationRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const currentWordsRef = useRef<string[]>([])
-  const isDeletingRef = useRef(false)
 
   // Track mount to debug re-renders
   if (!mountRef.current) {
@@ -151,86 +147,11 @@ function AgentLogoComponent() {
     if (!prompt) {
       // Fade out và ẩn bubble khi không có prompt
       bubbleEl.dataset.visible = 'false'
-      // Clear typing animation
-      if (typingAnimationRef.current) {
-        clearTimeout(typingAnimationRef.current)
-        typingAnimationRef.current = null
-      }
-      setDisplayedText('')
-      setIsTyping(false)
-      currentWordsRef.current = []
       return
     }
 
-    // Show bubble
+    // Show bubble với smooth animation
     bubbleEl.dataset.visible = 'true'
-
-    // Clear existing animation
-    if (typingAnimationRef.current) {
-      clearTimeout(typingAnimationRef.current)
-      typingAnimationRef.current = null
-    }
-
-    // Split prompt into words
-    const newWords = prompt.trim().split(/\s+/).filter(Boolean)
-    const oldWords = currentWordsRef.current
-
-    // If same text, no animation needed
-    if (newWords.join(' ') === oldWords.join(' ')) {
-      setDisplayedText(prompt)
-      setIsTyping(false)
-      currentWordsRef.current = newWords
-      return
-    }
-
-    // Start animation: delete old words first, then type new words
-    isDeletingRef.current = true
-    setIsTyping(true)
-    let currentIndex = oldWords.length
-
-    const deleteWord = () => {
-      if (currentIndex > 0) {
-        currentIndex--
-        const remainingWords = oldWords.slice(0, currentIndex)
-        setDisplayedText(remainingWords.join(' '))
-        typingAnimationRef.current = setTimeout(deleteWord, 80) // Speed: 80ms per word
-      } else {
-        // Finished deleting, start typing new words
-        isDeletingRef.current = false
-        currentIndex = 0
-        setDisplayedText('')
-        typeWord()
-      }
-    }
-
-    const typeWord = () => {
-      if (currentIndex < newWords.length) {
-        const wordsToShow = newWords.slice(0, currentIndex + 1)
-        setDisplayedText(wordsToShow.join(' '))
-        currentIndex++
-        typingAnimationRef.current = setTimeout(typeWord, 100) // Speed: 100ms per word
-      } else {
-        // Finished typing
-        currentWordsRef.current = newWords
-        setIsTyping(false)
-        typingAnimationRef.current = null
-      }
-    }
-
-    // Start deleting if there are old words, otherwise start typing
-    if (oldWords.length > 0) {
-      deleteWord()
-    } else {
-      isDeletingRef.current = false
-      typeWord()
-    }
-
-    return () => {
-      if (typingAnimationRef.current) {
-        clearTimeout(typingAnimationRef.current)
-        typingAnimationRef.current = null
-      }
-    }
   }, [prompt])
 
   return (
@@ -253,13 +174,16 @@ function AgentLogoComponent() {
             prompt ? 'opacity-100' : 'opacity-0'
           )}
         />
-        <span data-prompt-text>
-          {displayedText || '\u00A0'}
-          {/* Non-breaking space để giữ chiều cao khi không có prompt */}
-          {isTyping && (
-            <span className="inline-block w-0.5 h-4 bg-slate-100 ml-1 animate-pulse" />
-          )}
-        </span>
+        {prompt ? (
+          <TextGenerateEffect
+            words={prompt}
+            className="text-slate-100 text-base font-normal"
+            filter={true}
+            duration={0.4}
+          />
+        ) : (
+          <span className="text-slate-100 text-base">\u00A0</span>
+        )}
       </div>
       <div
         ref={containerRef}
