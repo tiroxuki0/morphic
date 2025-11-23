@@ -9,6 +9,7 @@ import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { InspectorDrawer } from '@/components/inspector/inspector-drawer'
 import { InspectorPanel } from '@/components/inspector/inspector-panel'
 
+import { useMediaQuery } from '@/lib/hooks/use-media-query'
 import { useArtifact } from './artifact-context'
 
 const DEFAULT_WIDTH = 500
@@ -45,6 +46,13 @@ export function ChatArtifactContainer({
   const [width, setWidth] = useState(DEFAULT_WIDTH)
   const [isResizing, setIsResizing] = useState(false)
   const { open, isMobile: isMobileSidebar } = useSidebar()
+  const isMobile = useMediaQuery('(max-width: 767px)')
+  const [layoutReady, setLayoutReady] = useState(false)
+
+  // Ensure layout is ready before rendering children to prevent double mounting
+  useEffect(() => {
+    setLayoutReady(true)
+  }, [])
 
   // Load saved width after hydration
   useEffect(() => {
@@ -136,43 +144,51 @@ export function ChatArtifactContainer({
         )}
       </div>
 
-      {/* Desktop: Independent panels like morphic-studio */}
-      <div
-        ref={containerRef}
-        className="hidden md:flex flex-1 min-w-0 overflow-hidden"
-      >
-        {/* Chat Panel - Independent container */}
-        <div className="flex-1 min-w-0 flex flex-col">{children}</div>
+      {/* Single Layout Container - Either Desktop or Mobile */}
+      {isMobile ? (
+        // Mobile Layout
+        <div className="flex-1 h-full min-w-0">
+          {layoutReady && children}
+          <InspectorDrawer />
+        </div>
+      ) : (
+        // Desktop Layout
+        <div ref={containerRef} className="flex flex-1 min-w-0 overflow-hidden">
+          {/* Chat Panel - Independent container */}
+          <div className="flex-1 min-w-0 flex flex-col">
+            {layoutReady && children}
+          </div>
 
-        {/* Resize Handle */}
-        {state.isOpen && state.part && (
+          {/* Resize Handle */}
+          {state.isOpen && state.part && (
+            <div
+              className={cn(
+                'w-1 mx-0.5 my-6 hover:bg-border transition-colors duration-200 cursor-col-resize select-none relative',
+                isResizing && 'bg-border/50'
+              )}
+              onMouseDown={startResize}
+            >
+              <div className="absolute inset-0 -left-2 -right-2" />
+            </div>
+          )}
+
+          {/* Right Panel - Independent with own animation */}
           <div
             className={cn(
-              'w-1 mx-0.5 my-6 hover:bg-border transition-colors duration-200 cursor-col-resize select-none relative',
-              isResizing && 'bg-border/50'
+              'bg-background overflow-hidden',
+              state.isOpen && state.part ? 'opacity-100' : 'w-0 opacity-0',
+              !isResizing && 'transition-all duration-300 ease-out'
             )}
-            onMouseDown={startResize}
+            style={{
+              width: state.isOpen && state.part ? `${width}px` : '0px'
+            }}
           >
-            <div className="absolute inset-0 -left-2 -right-2" />
-          </div>
-        )}
-
-        {/* Right Panel - Independent with own animation */}
-        <div
-          className={cn(
-            'bg-background overflow-hidden',
-            state.isOpen && state.part ? 'opacity-100' : 'w-0 opacity-0',
-            !isResizing && 'transition-all duration-300 ease-out'
-          )}
-          style={{
-            width: state.isOpen && state.part ? `${width}px` : '0px'
-          }}
-        >
-          <div className="h-full" style={{ width: `${width}px` }}>
-            {state.isOpen && state.part && <InspectorPanel />}
+            <div className="h-full" style={{ width: `${width}px` }}>
+              {state.isOpen && state.part && <InspectorPanel />}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Resize overlay to prevent text selection */}
       {isResizing && (
@@ -181,12 +197,6 @@ export function ChatArtifactContainer({
           style={{ zIndex: RESIZE_OVERLAY_Z_INDEX }}
         />
       )}
-
-      {/* Mobile: full-width chat + drawer */}
-      <div className="md:hidden flex-1 h-full min-w-0">
-        {children}
-        <InspectorDrawer />
-      </div>
     </div>
   )
 }

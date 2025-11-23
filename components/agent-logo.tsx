@@ -9,13 +9,8 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
-// Module-level flag để đảm bảo API chỉ được gọi 1 lần trong toàn bộ app lifecycle
-let globalHasFetchedGreeting = false
-
 function AgentLogoComponent() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const pupilsRef = useRef<HTMLDivElement[]>([])
-  const blinkCleanupRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const [prompt, setPrompt] = useState('')
   const promptValueRef = useRef('')
   const isFetchingPrompt = useRef(false)
@@ -24,17 +19,14 @@ function AgentLogoComponent() {
   const promptBubbleRef = useRef<HTMLDivElement | null>(null)
   const measureRef = useRef<HTMLDivElement | null>(null)
   const mountRef = useRef(false)
-  const [bubbleWidth, setBubbleWidth] = useState<number>(200)
-  console.log('bubbleWidth', bubbleWidth)
-  // Track mount to debug re-renders
-  if (!mountRef.current) {
-    mountRef.current = true
-    console.log('AgentLogo: Initial mount')
-  } else {
-    console.log('AgentLogo: Re-render (unexpected)')
-  }
+  const [bubbleWidth, setBubbleWidth] = useState<number>(164) // 140 + 24px padding
+  const [bubbleHeight, setBubbleHeight] = useState<number>(48) // min-height
+  const [showPrompt, setShowPrompt] = useState(false)
+  const [pupilPositions, setPupilPositions] = useState({ x: 0, y: 0 })
+  const [isBlinking, setIsBlinking] = useState(false)
+  const pupilStrength = 1.1 // Tăng sức mạnh animation của pupil
+
   useEffect(() => {
-    let frame = 0
     let blinkTimer: ReturnType<typeof setTimeout> | null = null
 
     const handlePointerMove = (event: PointerEvent) => {
@@ -50,32 +42,23 @@ function AgentLogoComponent() {
       // Track pointer movement in a wider radius so the pupils ease toward outside motions.
       const interactionDiameter = Math.max(rect.width, rect.height) * 1.5
       const interactionRadius = interactionDiameter / 2
-      const pupilTravel = Math.max(rect.width, rect.height) * 0.19
-      const nextX = clamp(dx / interactionRadius, -1, 1) * pupilTravel
-      const nextY = clamp(dy / interactionRadius, -1, 1) * pupilTravel
+      const pupilTravelX = Math.max(rect.width, rect.height) * 0.23
+      const pupilTravelY = Math.max(rect.width, rect.height) * 0.1
+      const nextX =
+        clamp(dx / interactionRadius, -1, 1) * pupilTravelX * pupilStrength
+      const nextY =
+        clamp(dy / interactionRadius, -1, 1) * pupilTravelY * pupilStrength
 
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() =>
-        pupilsRef.current.forEach(pupil => {
-          if (!pupil) return
-          // Skip React state to avoid rerenders; move pupils imperatively.
-          pupil.style.transform = `translate(${nextX}px, ${nextY}px)`
-        })
-      )
+      // Update state for motion/react animation
+      setPupilPositions({ x: nextX, y: nextY })
     }
 
     const scheduleBlink = () => {
       const delay = 2800 + Math.random() * 3200
       blinkTimer = setTimeout(() => {
-        pupilsRef.current.forEach(pupil => {
-          if (!pupil) return
-          pupil.classList.add('scale-y-0')
-          blinkCleanupRef.current.push(
-            setTimeout(() => {
-              pupil.classList.remove('scale-y-0')
-            }, 150)
-          )
-        })
+        setIsBlinking(true)
+        // Reset blink after animation duration
+        setTimeout(() => setIsBlinking(false), 150)
         scheduleBlink()
       }, delay)
     }
@@ -84,27 +67,21 @@ function AgentLogoComponent() {
     scheduleBlink()
     return () => {
       window.removeEventListener('pointermove', handlePointerMove)
-      cancelAnimationFrame(frame)
       if (blinkTimer) clearTimeout(blinkTimer)
-      blinkCleanupRef.current.forEach(clearTimeout)
-      blinkCleanupRef.current = []
     }
   }, [])
 
   useEffect(() => {
     // Triple guard: Module-level + component-level + fetching flag
     // Đảm bảo API chỉ được gọi 1 lần duy nhất trong toàn bộ app lifecycle
-    if (globalHasFetchedGreeting || hasStartedPromptPoll.current) return
+    if (hasStartedPromptPoll.current) return
 
-    globalHasFetchedGreeting = true
     hasStartedPromptPoll.current = true
 
     const fetchPrompt = async () => {
       // Double guard: Tránh race condition nếu fetch được gọi nhiều lần
       if (isFetchingPrompt.current) return
       isFetchingPrompt.current = true
-
-      console.log('AgentLogo: Fetching /api/greeting (only once)')
 
       try {
         const res = await fetch('/api/greeting')
@@ -129,7 +106,7 @@ function AgentLogoComponent() {
 
     fetchPrompt()
 
-    promptIntervalRef.current = setInterval(fetchPrompt, 5000)
+    promptIntervalRef.current = setInterval(fetchPrompt, 14000)
 
     // Cleanup: KHÔNG reset flags để đảm bảo chỉ fetch 1 lần
     // Chỉ cleanup interval nếu có
@@ -141,35 +118,89 @@ function AgentLogoComponent() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!promptBubbleRef.current) return
-
-    const bubbleEl = promptBubbleRef.current
-
-    if (!prompt) {
-      // Fade out và ẩn bubble khi không có prompt
-      bubbleEl.dataset.visible = 'false'
-      return
-    }
-
-    // Show bubble với smooth animation
-    bubbleEl.dataset.visible = 'true'
-  }, [prompt])
-
   useLayoutEffect(() => {
-    // Measure prompt width to drive smooth container resizing
+    // Measure prompt width to drive smooth container resizing - full text width
+    let rafId: number
+
     const measure = () => {
       const node = measureRef.current
       if (!node) return
-      // Add small padding to allow breathing room around text
-      const measured = node.scrollWidth
-      const padded = Math.max(measured + 18, 200)
-      setBubbleWidth(prev => (prev !== padded ? padded : prev))
+
+      // Get computed styles để tính toán chính xác
+      const computedStyle = window.getComputedStyle(node)
+      const paddingLeft = parseFloat(computedStyle.paddingLeft)
+      const paddingRight = parseFloat(computedStyle.paddingRight)
+
+      // Check if we're on mobile (viewport width < 640px)
+      const isMobile = window.innerWidth < 640
+
+      // Đo width và height thực tế cho cả desktop và mobile
+      const rect = node.getBoundingClientRect()
+      const measuredWidth = rect.width
+      const measuredHeight = rect.height
+
+      // Calculate max allowed width based on device
+      const maxAllowedWidth = isMobile
+        ? window.innerWidth // viewport width on mobile
+        : measuredWidth // Use measured width on desktop (will be clamped by CSS max-w-[90vw] on mobile)
+
+      // Đảm bảo min width 140px và không vượt quá max allowed width
+      const finalWidth = clamp(
+        Math.max(measuredWidth, 140 + paddingLeft + paddingRight),
+        140 + paddingLeft + paddingRight,
+        maxAllowedWidth
+      )
+
+      const finalHeight = Math.max(measuredHeight, 48) // min-height 3rem = 48px
+      // Update width
+      setBubbleWidth(prev => {
+        if (prev !== finalWidth) {
+          const diff = Math.abs(prev - finalWidth)
+          if (diff > 1) {
+            return finalWidth
+          }
+        }
+        return prev
+      })
+
+      // Update height
+      setBubbleHeight(prev => {
+        if (prev !== finalHeight) {
+          const diff = Math.abs(prev - finalHeight)
+          if (diff > 1) {
+            return finalHeight
+          }
+        }
+        return prev
+      })
     }
 
-    // Use rAF to ensure DOM has rendered new text before measuring
-    measure()
-    return undefined
+    // Debounce measurement to avoid spam during rapid changes
+    const debounceMeasure = () => {
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(measure)
+    }
+
+    debounceMeasure()
+
+    return () => {
+      cancelAnimationFrame(rafId)
+    }
+  }, [prompt])
+
+  // Control prompt appearance timing - bubble wrapper first, then prompt text
+  useEffect(() => {
+    if (prompt) {
+      // Bubble wrapper xuất hiện trước, prompt text xuất hiện sau
+      const timer = setTimeout(() => {
+        setShowPrompt(true)
+      }, 500) // Delay 500ms để bubble wrapper xuất hiện trước
+
+      return () => clearTimeout(timer)
+    } else {
+      // Khi ẩn, reset ngay lập tức
+      setShowPrompt(false)
+    }
   }, [prompt])
 
   return (
@@ -177,29 +208,56 @@ function AgentLogoComponent() {
       {/* Reserve space để tránh layout shift - luôn render bubble container */}
       <motion.div
         ref={promptBubbleRef}
-        data-visible="false"
+        layout // Enable layout animations for smooth width changes
         className={cn(
-          'absolute transform  rounded-2xl border border-white/20 bg-black/70 px-3 py-3 text-center text-base text-slate-100 shadow-xl backdrop-blur',
-          'origin-bottom transition-all duration-300 ease-out motion-reduce:transition-none',
-          'min-h-[3rem] flex items-center justify-center', // Reserve space để tránh layout shift
-          "data-[visible='true']:translate-y-[calc(-100%-12px)] data-[visible='true']:opacity-100 data-[visible='true']:pointer-events-auto",
-          "data-[visible='false']:translate-y-2 data-[visible='false']:opacity-0 data-[visible='false']:pointer-events-none"
+          'absolute rounded-2xl border border-white/20 bg-black/70 md:p-0 p-3 text-center text-base text-slate-100 shadow-xl backdrop-blur',
+          'origin-bottom motion-reduce:transition-none',
+          'flex items-center justify-center',
+          'will-change-[transform,width,opacity]', // Performance optimization
+          'transform-gpu', // Hardware acceleration
+          // Responsive text wrapping và width constraints
+          'max-w-[90vw]', // Giới hạn width trên mobile
+          'whitespace-normal'
         )}
-        initial={{ width: 140 }}
-        animate={{ width: bubbleWidth }}
+        initial={{
+          width: 140 + 24, // 140px + padding (12px * 2)
+          height: 48, // min-height
+          y: 8,
+          opacity: 0,
+          pointerEvents: 'none'
+        }}
+        animate={{
+          width: bubbleWidth,
+          height: bubbleHeight,
+          y: prompt ? -bubbleHeight - 12 : 8, // Dynamic y position based on bubble height
+          opacity: prompt ? 1 : 0,
+          pointerEvents: prompt ? 'auto' : 'none'
+        }}
         transition={{
           type: 'spring',
-          stiffness: 260,
-          damping: 28
+          stiffness: 180, // Mượt hơn - thấp hơn để ít bounce
+          damping: 25, // Cao hơn để ít oscillation
+          mass: 0.8, // Nhẹ hơn để responsive hơn
+          // Separate transitions for different properties
+          opacity: { duration: 0.3, ease: 'easeOut' },
+          y: { type: 'spring', stiffness: 200, damping: 25 },
+          width: { type: 'spring', stiffness: 150, damping: 30 }, // Width animation mượt hơn
+          height: { type: 'spring', stiffness: 150, damping: 30 } // Height animation
         }}
       >
-        <div
-          className={cn(
-            'absolute left-1/2 top-full -translate-x-1/2 -translate-y-1/2 h-4 w-4 rotate-45 border-b border-r border-white/20 bg-black/70 transition-opacity duration-300',
-            prompt ? 'opacity-100' : 'opacity-0'
-          )}
+        <motion.div
+          className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-[calc(50%-0.5px)] h-4 w-4 rotate-45 border-b border-r border-white/20 bg-black will-change-opacity"
+          animate={{
+            opacity: prompt ? 1 : 0,
+            scale: prompt ? 1 : 0.8 // Subtle scale animation cho arrow
+          }}
+          transition={{
+            opacity: { duration: 0.3, ease: 'easeOut' },
+            scale: { duration: 0.4, ease: 'easeOut' },
+            delay: prompt ? 0.1 : 0 // Arrow xuất hiện sau bubble wrapper một chút
+          }}
         />
-        {prompt ? (
+        {showPrompt ? (
           <TextGenerateEffect
             words={prompt}
             className="text-slate-100 text-base font-normal"
@@ -210,10 +268,14 @@ function AgentLogoComponent() {
           <span className="text-slate-100 text-base"></span>
         )}
       </motion.div>
-      {/* Hidden measurer to size bubble width */}
+      {/* Hidden measurer to size bubble width - respect mobile constraints */}
       <div
         ref={measureRef}
-        className="pointer-events-none absolute left-0 top-0 z-[-1] whitespace-pre px-3 py-3 text-base font-normal opacity-0"
+        className="pointer-events-none absolute left-0 top-0 z-[-1] px-3 py-3 text-base font-normal opacity-0 max-w-[90vw] whitespace-normal"
+        style={{
+          width: 'max-content', // Fit content width but respect max-width
+          height: 'max-content'
+        }}
       >
         {prompt || '\u00A0'}
       </div>
@@ -233,14 +295,18 @@ function AgentLogoComponent() {
           <div className="absolute inset-0 rounded-full bg-black/70" />
           <div className="relative flex items-center justify-center gap-[1px]">
             {[0, 1].map(index => (
-              <div
+              <motion.div
                 key={index}
-                className={cn(
-                  'h-3 w-3 rounded-full bg-white transition-transform duration-600 ease-out',
-                  'will-change-transform'
-                )}
-                ref={node => {
-                  if (node) pupilsRef.current[index] = node
+                className="h-3 w-3 rounded-full bg-white will-change-transform"
+                animate={{
+                  x: pupilPositions.x,
+                  y: pupilPositions.y,
+                  scaleY: isBlinking ? 0 : 1
+                }}
+                transition={{
+                  x: { type: 'spring', stiffness: 400, damping: 110 },
+                  y: { type: 'spring', stiffness: 400, damping: 110 },
+                  scaleY: { duration: 0.15, ease: 'easeInOut' }
                 }}
               />
             ))}

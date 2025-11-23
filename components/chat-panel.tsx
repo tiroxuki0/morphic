@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 
 import { UseChatHelpers } from '@ai-sdk/react'
@@ -139,9 +139,6 @@ export function ChatPanel({
     }
   }
 
-  // Memoize AgentLogo to prevent re-renders when ChatPanel re-renders
-  const agentLogo = useMemo(() => <AgentLogo />, [])
-
   return (
     <div
       className={cn(
@@ -151,7 +148,7 @@ export function ChatPanel({
     >
       {messages.length === 0 && (
         <div className="mb-10 flex flex-col items-center gap-4">
-          {agentLogo}
+          <AgentLogo />
         </div>
       )}
       {uploadedFiles.length > 0 && (
