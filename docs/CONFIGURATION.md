@@ -1,6 +1,6 @@
 # Configuration Guide
 
-This guide covers the optional features and their configuration in Morphic.
+This guide covers the optional features and their configuration in Darin.
 
 ## Table of Contents
 
@@ -11,7 +11,7 @@ This guide covers the optional features and their configuration in Morphic.
 
 ## Authentication
 
-By default, Morphic runs in **anonymous mode** with authentication disabled (`ENABLE_AUTH=false` in `.env.local.example`). This is ideal for personal use where all users share a single anonymous user ID.
+By default, Darin runs in **anonymous mode** with authentication disabled (`ENABLE_AUTH=false` in `.env.local.example`). This is ideal for personal use where all users share a single anonymous user ID.
 
 ### Anonymous Mode (Default)
 
@@ -42,7 +42,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=[YOUR_SUPABASE_ANON_KEY]
    - **Project URL**: Settings → API → Project URL
    - **Anon Key**: Settings → API → Project API keys → anon/public
 
-With authentication enabled, users will need to sign up/login to use Morphic, and each user will have isolated chat history.
+With authentication enabled, users will need to sign up/login to use Darin, and each user will have isolated chat history.
 
 ## Search Providers
 
@@ -201,7 +201,7 @@ Model configuration files use the following structure:
 }
 ```
 
-Define all four combinations to control which model runs for every search mode (`quick`, `adaptive`) and preference (`speed`, `quality`). For example, you can pair `quick/speed` with `gemini-2.5-flash-lite` while keeping `adaptive/quality` on GPT-5. The default config ships with OpenAI models for every slot so Morphic works out-of-the-box.
+Define all four combinations to control which model runs for every search mode (`quick`, `adaptive`) and preference (`speed`, `quality`). For example, you can pair `quick/speed` with `gemini-2.5-flash-lite` while keeping `adaptive/quality` on GPT-5. The default config ships with OpenAI models for every slot so Darin works out-of-the-box.
 
 ### Supported Providers
 
@@ -254,7 +254,7 @@ Then update your `config/models/*.json` files to use Ollama models:
 
 **Important Notes:**
 
-- **Tools Capability**: Morphic requires models to support the `tools` capability for function calling. On server startup, Morphic validates configured models and logs the results. Note that even if a model reports tools support, actual tool calling performance depends on the model's capabilities and is not guaranteed.
+- **Tools Capability**: Darin requires models to support the `tools` capability for function calling. On server startup, Darin validates configured models and logs the results. Note that even if a model reports tools support, actual tool calling performance depends on the model's capabilities and is not guaranteed.
 
 - **Validation Logs**: Check server logs on startup to verify your configured models:
   ```
@@ -276,13 +276,15 @@ LANGFUSE_HOST=https://cloud.langfuse.com
 
 ### File Upload
 
-Enable file upload with Cloudflare R2:
+Enable the upload UI/API and configure Cloudflare R2 storage:
 
 ```bash
-CLOUDFLARE_R2_ACCESS_KEY_ID=[YOUR_ACCESS_KEY]
-CLOUDFLARE_R2_SECRET_ACCESS_KEY=[YOUR_SECRET_KEY]
-CLOUDFLARE_R2_ACCOUNT_ID=[YOUR_ACCOUNT_ID]
-CLOUDFLARE_R2_BUCKET_NAME=[YOUR_BUCKET_NAME]
+NEXT_PUBLIC_ENABLE_FILE_UPLOADS=true
+R2_ACCOUNT_ID=[YOUR_ACCOUNT_ID]
+R2_ACCESS_KEY_ID=[YOUR_ACCESS_KEY]
+R2_SECRET_ACCESS_KEY=[YOUR_SECRET_KEY]
+R2_BUCKET_NAME=user-uploads
+R2_PUBLIC_URL=https://pub-xxx.r2.dev
 ```
 
 ### Alternative Fetch Tool

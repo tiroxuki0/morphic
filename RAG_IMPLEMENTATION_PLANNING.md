@@ -4,7 +4,7 @@
 
 - Implement RAG Confluence: RAG với dữ liệu từ Atlassian Confluence
 - Implement RAG Options: Hệ thống RAG linh hoạt với nhiều cấu hình
-- Tách biệt hoàn toàn: Không sửa đổi logic hiện tại của Morphic
+- Tách biệt hoàn toàn: Không sửa đổi logic hiện tại của Darin
 - Modular design: Có thể bật/tắt độc lập
 
 ## 🏗️ Kiến trúc Tổng quan
@@ -259,4 +259,4 @@ CREATE TABLE rag_documents (
 
 ---
 
-_Planning created for Codex AI implementation. Ensure all new code follows Morphic's coding standards and testing requirements._
+_Planning created for Codex AI implementation. Ensure all new code follows Darin's coding standards and testing requirements._

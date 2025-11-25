@@ -10,6 +10,7 @@ type UseFileDropzoneProps = {
   maxFiles?: number
   allowedTypes?: string[]
   chatId: string
+  enabled?: boolean
 }
 
 export function useFileDropzone({
@@ -17,23 +18,27 @@ export function useFileDropzone({
   setUploadedFiles,
   chatId,
   maxFiles = 3,
-  allowedTypes = ['image/png', 'image/jpeg', 'application/pdf']
+  allowedTypes = ['image/png', 'image/jpeg', 'application/pdf'],
+  enabled = true
 }: UseFileDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!enabled) return
     e.preventDefault()
     setIsDragging(true)
-  }, [])
+  }, [enabled])
 
   const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!enabled) return
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDragging(false)
     }
-  }, [])
+  }, [enabled])
 
   const handleDrop = useCallback(
     async (e: React.DragEvent<HTMLDivElement>) => {
+      if (!enabled) return
       e.preventDefault()
       setIsDragging(false)
 
@@ -102,11 +107,11 @@ export function useFileDropzone({
         })
       )
     },
-    [allowedTypes, maxFiles, uploadedFiles, setUploadedFiles, chatId]
+    [allowedTypes, maxFiles, uploadedFiles, setUploadedFiles, chatId, enabled]
   )
 
   return {
-    isDragging,
+    isDragging: enabled ? isDragging : false,
     handleDragOver,
     handleDragLeave,
     handleDrop

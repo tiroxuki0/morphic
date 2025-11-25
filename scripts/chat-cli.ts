@@ -411,7 +411,7 @@ Authentication:
 
 To get cookies:
 1. Open DevTools > Network tab
-2. Make any request in Morphic
+2. Make any request in Darin
 3. Click on the request > Headers > Request Headers > Cookie
 4. Copy the entire Cookie value
 5. Add to .env.local as MORPHIC_COOKIES="copied-value"

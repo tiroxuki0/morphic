@@ -21,7 +21,7 @@ export class ChromaVectorStore implements VectorStore {
       this.config.baseUrl = 'http://localhost:8000'
     }
     if (!this.config.collectionName) {
-      this.config.collectionName = 'morphic-rag'
+      this.config.collectionName = 'darin-rag'
     }
   }
 

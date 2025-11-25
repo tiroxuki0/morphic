@@ -61,7 +61,7 @@ function validateModelsConfigStructure(
 
 export async function loadModelsConfig(): Promise<ModelsConfig> {
   const profile =
-    process.env.MORPHIC_CLOUD_DEPLOYMENT === 'true' ? 'cloud' : 'default'
+    process.env.DARIN_CLOUD_DEPLOYMENT === 'true' ? 'cloud' : 'default'
 
   if (cachedConfig && cachedProfile === profile) {
     return cachedConfig
@@ -78,7 +78,7 @@ export async function loadModelsConfig(): Promise<ModelsConfig> {
 // Synchronous load (for code paths that need sync access)
 export function loadModelsConfigSync(): ModelsConfig {
   const profile =
-    process.env.MORPHIC_CLOUD_DEPLOYMENT === 'true' ? 'cloud' : 'default'
+    process.env.DARIN_CLOUD_DEPLOYMENT === 'true' ? 'cloud' : 'default'
 
   if (cachedConfig && cachedProfile === profile) {
     return cachedConfig

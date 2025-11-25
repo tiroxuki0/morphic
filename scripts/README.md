@@ -124,7 +124,7 @@ bun chat -c "chat_123" -t regenerate --message-id "msg_456" -m "Tell me about ma
 
 If you encounter "User not authenticated" errors:
 
-1. Ensure you're logged into Morphic in your browser
+1. Ensure you're logged into Darin in your browser
 2. Get fresh cookies from DevTools
 3. Update `MORPHIC_COOKIES` in `.env.local`
 4. Cookies expire after ~1 hour, so refresh them if needed

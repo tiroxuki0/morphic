@@ -6,6 +6,7 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { toast } from 'sonner'
 
+import { ENABLE_FILE_UPLOADS } from '@/lib/config/feature-flags'
 import { generateId } from '@/lib/db/schema'
 import { UploadedFile } from '@/lib/types'
 import type { UIMessage } from '@/lib/types/ai'
@@ -357,23 +358,27 @@ export function Chat({
       return
     }
 
-    const uploaded = uploadedFiles.filter(f => f.status === 'uploaded')
+    const uploaded = ENABLE_FILE_UPLOADS
+      ? uploadedFiles.filter(f => f.status === 'uploaded')
+      : []
 
-    if (input.trim() || uploaded.length > 0) {
+    if (input.trim() || (ENABLE_FILE_UPLOADS && uploaded.length > 0)) {
       const parts: any[] = []
 
       if (input.trim()) {
         parts.push({ type: 'text', text: input })
       }
 
-      uploaded.forEach(f => {
-        parts.push({
-          type: 'file',
-          url: f.url!,
-          filename: f.name!,
-          mediaType: f.file.type
+      if (ENABLE_FILE_UPLOADS) {
+        uploaded.forEach(f => {
+          parts.push({
+            type: 'file',
+            url: f.url!,
+            filename: f.name!,
+            mediaType: f.file.type
+          })
         })
-      })
+      }
 
       sendMessage({ role: 'user', parts })
       setInput('')
@@ -391,7 +396,8 @@ export function Chat({
     useFileDropzone({
       uploadedFiles,
       setUploadedFiles,
-      chatId: chatId
+      chatId: chatId,
+      enabled: ENABLE_FILE_UPLOADS
     })
 
   return (
@@ -401,9 +407,9 @@ export function Chat({
         messages.length === 0 ? 'items-center justify-center' : ''
       )}
       data-testid="full-chat"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDragOver={ENABLE_FILE_UPLOADS ? handleDragOver : undefined}
+      onDragLeave={ENABLE_FILE_UPLOADS ? handleDragLeave : undefined}
+      onDrop={ENABLE_FILE_UPLOADS ? handleDrop : undefined}
     >
       <ChatMessages
         sections={sections}
@@ -469,8 +475,9 @@ export function Chat({
         setUploadedFiles={setUploadedFiles}
         scrollContainerRef={scrollContainerRef}
         onNewChat={handleNewChat}
+        enableUploads={ENABLE_FILE_UPLOADS}
       />
-      <DragOverlay visible={isDragging} />
+      <DragOverlay visible={ENABLE_FILE_UPLOADS && isDragging} />
       <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
       <ErrorModal
         open={errorModal.open}

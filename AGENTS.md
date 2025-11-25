@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Morphic is a Next.js App Router workspace. `app/` holds routes, layouts, and API handlers, `components/` plus `components/ui` provide design primitives, and `lib/` stores streaming helpers, Supabase clients, and AI actions. Provider presets live in `config/`, Drizzle schemas and migrations in `drizzle/`, long-form docs in `docs/`, and static assets under `public/`. Tests stay near each feature inside `__tests__` folders (for example `lib/actions/__tests__/chat.test.ts`), while automation lives in `scripts/` alongside infra manifests such as `docker-compose.yaml` and `proxy.ts`.
+Darin is a Next.js App Router workspace. `app/` holds routes, layouts, and API handlers, `components/` plus `components/ui` provide design primitives, and `lib/` stores streaming helpers, Supabase clients, and AI actions. Provider presets live in `config/`, Drizzle schemas and migrations in `drizzle/`, long-form docs in `docs/`, and static assets under `public/`. Tests stay near each feature inside `__tests__` folders (for example `lib/actions/__tests__/chat.test.ts`), while automation lives in `scripts/` alongside infra manifests such as `docker-compose.yaml` and `proxy.ts`.
 
 ## Build, Test, and Development Commands
 `bun dev` starts the local server; `bun run build && bun start` serves production output. Run `bun run migrate` whenever database schema changes, then `bun run lint`, `bun run typecheck`, and `bun run format:check` before committing. Execute `bun run test` or `bun run test:watch` for Vitest suites, and use `docker compose up -d` when you need Postgres, Redis, and SearXNG locally.

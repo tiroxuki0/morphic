@@ -1,20 +1,20 @@
-# Docker Compose configuration for the morphic-stack development environment
+# Docker Compose configuration for the darin-stack development environment
 
-name: morphic-stack
+name: darin-stack
 services:
-  morphic:
-    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/morphic}:latest
+  darin:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/darin}:latest
     command: bun start -H 0.0.0.0
     build:
       context: .
       dockerfile: Dockerfile
       cache_from:
-        - morphic:builder
-        - morphic:latest
+        - darin:builder
+        - darin:latest
     env_file: .env.local # Load environment variables
     environment:
       # Database connection for Docker Compose
-      DATABASE_URL: postgresql://${POSTGRES_USER:-morphic}:${POSTGRES_PASSWORD:-morphic}@postgres:5432/${POSTGRES_DB:-morphic}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-darin}:${POSTGRES_PASSWORD:-darin}@postgres:5432/${POSTGRES_DB:-darin}
       DATABASE_SSL_DISABLED: 'true' # Disable SSL for local Docker PostgreSQL
       # Authentication settings (default: disabled for personal Docker use)
       ENABLE_AUTH: ${ENABLE_AUTH:-false}
@@ -32,15 +32,15 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-morphic}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-morphic}
-      POSTGRES_DB: ${POSTGRES_DB:-morphic}
+      POSTGRES_USER: ${POSTGRES_USER:-darin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-darin}
+      POSTGRES_DB: ${POSTGRES_DB:-darin}
     ports:
       - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-morphic}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-darin}']
       interval: 10s
       timeout: 5s
       retries: 5

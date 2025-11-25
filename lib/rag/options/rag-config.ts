@@ -44,7 +44,7 @@ function readPresetFile(): RagPresetMap {
     cachedPresets = {}
   }
 
-  return cachedPresets
+  return cachedPresets ?? {}
 }
 
 function resolveVectorStoreConfig(
@@ -61,12 +61,12 @@ function resolveVectorStoreConfig(
       return {
         apiKey: process.env.QDRANT_API_KEY,
         baseUrl: process.env.QDRANT_URL ?? 'http://localhost:6333',
-        collectionName: process.env.QDRANT_COLLECTION ?? 'morphic-rag'
+        collectionName: process.env.QDRANT_COLLECTION ?? 'darin-rag'
       }
     case 'chroma':
       return {
         baseUrl: process.env.CHROMA_URL ?? 'http://localhost:8000',
-        collectionName: process.env.CHROMA_COLLECTION ?? 'morphic-rag'
+        collectionName: process.env.CHROMA_COLLECTION ?? 'darin-rag'
       }
   }
 }

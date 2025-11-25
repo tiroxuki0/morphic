@@ -1,4 +1,9 @@
-import { Pinecone, Errors } from '@pinecone-database/pinecone'
+import {
+  Errors,
+  Pinecone,
+  type RecordMetadata,
+  type ServerlessSpecCloudEnum
+} from '@pinecone-database/pinecone'
 
 import type {
   RagChunk,
@@ -7,6 +12,38 @@ import type {
   VectorStore,
   VectorStoreConfig
 } from '@/lib/rag/types/rag'
+
+function toPineconeMetadata(metadata: Record<string, unknown>): RecordMetadata {
+  const record: RecordMetadata = {}
+
+  for (const [key, value] of Object.entries(metadata)) {
+    if (value === undefined || value === null) continue
+
+    if (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      record[key] = value
+    } else if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
+      record[key] = value
+    } else {
+      record[key] = JSON.stringify(value)
+    }
+  }
+
+  return record
+}
+
+function resolveServerlessCloud(cloud?: unknown): ServerlessSpecCloudEnum {
+  const normalized = typeof cloud === 'string' ? cloud.toLowerCase() : null
+
+  if (normalized === 'aws' || normalized === 'gcp' || normalized === 'azure') {
+    return normalized
+  }
+
+  return 'aws'
+}
 
 export class PineconeVectorStore implements VectorStore {
   readonly type = 'pinecone'
@@ -45,7 +82,7 @@ export class PineconeVectorStore implements VectorStore {
     const vectors: Array<{
       id: string
       values: number[]
-      metadata: Record<string, unknown>
+      metadata: RecordMetadata
     }> = []
 
     for (const chunk of chunks) {
@@ -61,11 +98,11 @@ export class PineconeVectorStore implements VectorStore {
       vectors.push({
         id: chunk.chunkId,
         values: embedding,
-        metadata: {
+        metadata: toPineconeMetadata({
           text: chunk.content,
           title: chunk.title,
           ...chunk.metadata
-        }
+        })
       })
     }
 
@@ -132,7 +169,9 @@ export class PineconeVectorStore implements VectorStore {
           metric: 'cosine',
           spec: {
             serverless: {
-              cloud: (this.config.cloud as string) ?? process.env.PINECONE_CLOUD ?? 'aws',
+              cloud: resolveServerlessCloud(
+                this.config.cloud ?? process.env.PINECONE_CLOUD
+              ),
               region: (this.config.region as string) ?? process.env.PINECONE_REGION ?? 'us-east-1'
             }
           },

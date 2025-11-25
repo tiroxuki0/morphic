@@ -1,4 +1,4 @@
-# Tổng quan Morphic
+# Tổng quan Darin
 
 - Công cụ tìm kiếm AI với giao diện Generative UI, hiểu câu hỏi ngôn ngữ tự nhiên và chọn chế độ tìm (Quick, Planning, Adaptive).
 - Hỗ trợ nhiều nhà cung cấp AI (OpenAI mặc định, Anthropic Claude, Google Gemini, Vercel AI Gateway, Ollama) và tùy chỉnh cấu hình model trong `config/models/`.

@@ -121,7 +121,7 @@ export class QdrantVectorStore implements VectorStore {
   }
 
   private getCollectionName() {
-    return (this.config.collectionName as string) || 'morphic-rag'
+    return (this.config.collectionName as string) || 'darin-rag'
   }
 
   private async embedQuery(query: string) {

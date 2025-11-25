@@ -108,7 +108,6 @@ function AgentLogoComponent() {
 
     promptIntervalRef.current = setInterval(fetchPrompt, 14000)
 
-    // Cleanup: KHÔNG reset flags để đảm bảo chỉ fetch 1 lần
     // Chỉ cleanup interval nếu có
     return () => {
       if (promptIntervalRef.current) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 
+import { ENABLE_FILE_UPLOADS } from '@/lib/config/feature-flags'
 import { getCurrentUserId } from '@/lib/auth/get-current-user'
 import {
   getR2Client,
@@ -14,6 +15,13 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
 
 export async function POST(req: NextRequest) {
   try {
+    if (!ENABLE_FILE_UPLOADS) {
+      return NextResponse.json(
+        { error: 'File uploads are disabled' },
+        { status: 403 }
+      )
+    }
+
     const userId = await getCurrentUserId()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
